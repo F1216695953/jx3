@@ -1,5 +1,5 @@
 [project]
-name = "ok-script-app"
+name = "jx3-wujie-daily-assistant"
 version = "0.0.0"
 requires-python = ">=3.12,<3.13"
 dependencies = []
@@ -12,7 +12,11 @@ qt = [
     "opencv-python",
 ]
 # Compatibility alias: the web frontend was removed in ok-script 3.
-web = ["ok-script-app[qt]"]
+web = [
+    "ok-script[adb,default,ocr,qt]==3.0.0b3",
+    "openvino",
+    "opencv-python",
+]
 docs = [
     "mkdocs==1.6.1",
 ]

@@ -266,3 +266,74 @@ msgstr "工具按键"
 
 msgid "In Game Hotkey for Skills"
 msgstr "游戏内技能快捷键"
+
+msgid "Daily Checklist"
+msgstr "每日清单"
+
+
+msgid "Review a daily plan, time budget, and manual check-ins."
+msgstr "查看日常计划、时间预算和手动打卡。"
+
+
+msgid "Daily Tasks"
+msgstr "日常事项"
+
+
+msgid "Enter your daily tasks, one item per row."
+msgstr "每行填写一项日常任务。"
+
+
+msgid "Completed Tasks"
+msgstr "已完成事项"
+
+
+msgid "Enter completed task names; each must match a Daily Tasks item."
+msgstr "填写已完成事项名称，必须与“日常事项”中的项目一致。"
+
+
+msgid "Daily Budget Minutes"
+msgstr "每日时间预算（分钟）"
+
+
+msgid "Available time for today's plan, in minutes."
+msgstr "今日可用时间预算，单位为分钟。"
+
+
+msgid "Estimated Minutes Per Task"
+msgstr "单项预计用时（分钟）"
+
+
+msgid "Rough time estimate for each task, in minutes."
+msgstr "每项任务的粗略预计用时，单位为分钟。"
+
+
+msgid "Daily progress"
+msgstr "今日进度"
+
+
+msgid "Time budget / planned"
+msgstr "预算 / 计划用时"
+
+
+msgid "Estimated time remaining"
+msgstr "预计剩余用时"
+
+
+msgid "Checklist status"
+msgstr "清单状态"
+
+
+msgid "Add items to Daily Tasks in task settings."
+msgstr "请在任务设置中填写日常事项。"
+
+
+msgid "Done"
+msgstr "已完成"
+
+
+msgid "Pending"
+msgstr "待打卡"
+
+
+msgid "Daily checklist updated."
+msgstr "每日清单已更新。"

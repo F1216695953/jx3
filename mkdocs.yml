@@ -1,7 +1,7 @@
-site_name: ok-script-app
-site_description: Build Windows, Android emulator, and browser automation apps with ok-script.
-repo_name: ok-oldking/ok-script-app
-repo_url: https://github.com/ok-oldking/ok-script-app
+site_name: 剑网3无界日常助手
+site_description: 基于 ok-script 的日常计划与手动打卡工具。
+repo_name: F1216695953/jx3
+repo_url: https://github.com/F1216695953/jx3
 edit_uri: edit/master/docs/
 
 docs_dir: docs

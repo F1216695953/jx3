@@ -1,66 +1,29 @@
-# ok-script-app
+# JX3 Unbounded Daily Planner
 
-English | [中文](README.md)
+[English](README_en.md) | [简体中文](README.md)
 
-ok-script-app is a Python automation project template built on [ok-script](https://github.com/ok-oldking/ok-script). It supports GUI automation apps for native Windows games, Android emulators, and browser games.
+A Windows desktop daily-planning utility built on [ok-script](https://github.com/ok-oldking/ok-script). Its first task provides an editable checklist, a daily time budget, and manual check-ins; it does not click or control the game.
 
-The template includes task examples, OCR, template matching, configuration widgets, tests, i18n, EXE packaging, and update/release configuration. It is a starter project and feature demo, not a finished automation tool for a specific game.
+## Current Configuration
+
+- Client: Windows, `JX3ClientX3DX64.exe`
+- Minimum resolution: `1280×720`, aspect ratio `16:9`
+- Window class: not configured; default window matching is used
+- Icon: template icon retained for now
+- Update source: this repository, `https://github.com/F1216695953/jx3`
+
+## Run
+
+```powershell
+.\.venv\Scripts\python.exe main_debug.py
+```
+
+Run **Daily Checklist** from the task list. Add items under **Daily Tasks** and manually enter completed item names under **Completed Tasks**. The default budget is 60 minutes and the estimate is 10 minutes per task. Check-ins reset each local day.
 
 ## Documentation
 
-The complete documentation is organized as an MkDocs site:
-
-- [Documentation home](docs/en/index.md)
 - [Quick start](docs/en/getting-started.md)
-- [App and runtime target configuration](docs/en/configuration.md)
-- [Task development](docs/en/tasks.md)
+- [App configuration](docs/en/configuration.md)
+- [Task guide](docs/en/tasks.md)
 - [Packaging and release](docs/en/release.md)
-- [Build the documentation site](docs/en/documentation.md)
-- [中文文档](docs/index.md)
-
-## Quick Preview
-
-```powershell
-py -3.12 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-$PypiIndex = "https://pypi.org/simple/"
-python -m pip install --index-url $PypiIndex --upgrade pip
-python -m pip install --index-url $PypiIndex --no-deps --upgrade -r requirements.txt
-python main_debug.py
-```
-
-Direct dependencies are managed in `pyproject.toml`. `requirements.txt` is the
-compiled Qt profile for ok-script `3.0.0b3`; do not edit this generated lock
-directly. ok-script 3 removed the web frontend. `requirements-web.txt`, the
-`web` extra, and the web launchers remain aliases for the desktop app.
-The official PyPI index URL for pip
-must include `/simple/`; `https://pypi.org/` is not a valid package index URL.
-
-See the [Quick start](docs/en/getting-started.md) for repository initialization, runtime target configuration, the first task, and tag-based packaging.
-
-## Build the Documentation Site
-
-```powershell
-python -m pip install --index-url https://pypi.org/simple/ -r requirements-docs.txt
-python -m mkdocs serve
-```
-
-Open `http://127.0.0.1:8000/` to preview the site. Build static HTML with:
-
-```powershell
-python -m mkdocs build --strict
-```
-
-The output is written to `site/`. `.github/workflows/docs.yml` can publish it automatically to GitHub Pages; see the [documentation-site guide](docs/en/documentation.md) for setup.
-
-## Community
-
-- QQ user group: `1097603920`
-- QQ developer group: `938132715`
-- [Discord](https://discord.gg/vVyCatEBgA)
-
-## Credits
-
-- [ok-script](https://github.com/ok-oldking/ok-script)
-- [OnnxOCR](https://github.com/ok-oldking/OnnxOCR)
-- [PyQt-Fluent-Widgets](https://github.com/zhiyiYo/PyQt-Fluent-Widgets)
+- [简体中文文档](docs/index.md)

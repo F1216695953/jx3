@@ -266,3 +266,74 @@ msgstr "Tool Key"
 
 msgid "In Game Hotkey for Skills"
 msgstr "In-Game Hotkeys for Skills"
+
+msgid "Daily Checklist"
+msgstr "Daily Checklist"
+
+
+msgid "Review a daily plan, time budget, and manual check-ins."
+msgstr "Review a daily plan, time budget, and manual check-ins."
+
+
+msgid "Daily Tasks"
+msgstr "Daily Tasks"
+
+
+msgid "Enter your daily tasks, one item per row."
+msgstr "Enter your daily tasks, one item per row."
+
+
+msgid "Completed Tasks"
+msgstr "Completed Tasks"
+
+
+msgid "Enter completed task names; each must match a Daily Tasks item."
+msgstr "Enter completed task names; each must match a Daily Tasks item."
+
+
+msgid "Daily Budget Minutes"
+msgstr "Daily Budget Minutes"
+
+
+msgid "Available time for today's plan, in minutes."
+msgstr "Available time for today's plan, in minutes."
+
+
+msgid "Estimated Minutes Per Task"
+msgstr "Estimated Minutes Per Task"
+
+
+msgid "Rough time estimate for each task, in minutes."
+msgstr "Rough time estimate for each task, in minutes."
+
+
+msgid "Daily progress"
+msgstr "Daily progress"
+
+
+msgid "Time budget / planned"
+msgstr "Time budget / planned"
+
+
+msgid "Estimated time remaining"
+msgstr "Estimated time remaining"
+
+
+msgid "Checklist status"
+msgstr "Checklist status"
+
+
+msgid "Add items to Daily Tasks in task settings."
+msgstr "Add items to Daily Tasks in task settings."
+
+
+msgid "Done"
+msgstr "Done"
+
+
+msgid "Pending"
+msgstr "Pending"
+
+
+msgid "Daily checklist updated."
+msgstr "Daily checklist updated."

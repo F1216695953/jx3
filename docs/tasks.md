@@ -1,52 +1,18 @@
-# 任务开发
+# 任务说明
 
-一次性任务示例位于 `src/tasks/MyOneTimeTask.py`，后台触发任务示例位于 `src/tasks/MyTriggerTask.py`。
+## 每日清单
 
-## 创建任务
+内置任务 `src/tasks/DailyChecklistTask.py` 仅处理用户填写的数据，不读取游戏画面，也不发送按键或鼠标操作。
 
-- 用户点击后执行一次的任务继承 `BaseTask`。
-- 需要后台周期检查的任务继承 `TriggerTask`。
-- 通用能力可以放在 `src/tasks/MyBaseTask.py`。
+任务设置：
 
-任务类通常在 `__init__()` 中设置名称、描述、默认配置和配置控件，在 `run()` 中实现自动化逻辑。
+- **日常事项**：每行填写一个要完成的事项。
+- **已完成事项**：手动填写已完成项目的名称，名称需与“日常事项”完全一致。
+- **每日时间预算（分钟）**：默认 60 分钟。
+- **单项预计用时（分钟）**：默认 10 分钟，用于估算总用时和剩余用时。
 
-## 注册任务
+运行任务后，应用显示已完成数量、预算与预计用时，以及每一项的“已完成/待打卡”状态。完成记录按本地日期每天重置。可在任务设置中编辑完成列表进行手动打卡。
 
-在 `src/config.py` 中注册模块路径和类名：
+## 扩展任务
 
-```python
-'onetime_tasks': [
-    ['src.tasks.MyFirstTask', 'MyFirstTask'],
-    ['ok', 'DiagnosisTask'],
-],
-```
-
-后台任务使用 `trigger_tasks` 列表。
-
-## 常用能力
-
-- 修改 `default_config` 增加任务配置默认值。
-- 修改 `config_type` 选择配置控件类型。
-- 使用 `self.ocr()` 识别文字。
-- 使用 `self.find_one()` 或 `self.find_feature()` 进行模板匹配。
-- 使用 `self.info_set()` 在 UI 中展示任务状态。
-- 使用 `self.log_info(..., notify=True)` 发送通知。
-
-启用 `custom_tasks` 后，也可以在 GUI 中创建和编辑自定义任务脚本。
-
-## 使用 AI 辅助开发
-
-仓库内置以下 Agent Skills：
-
-- `$ok-script-tasks`：创建、修改和注册任务类。
-- `$ok-script-codegen`：根据需求或截图生成任务自动化逻辑。
-- `$ok-script-i18n`：同步任务名称、描述和配置项翻译。
-
-## 验证
-
-```powershell
-python main_debug.py
-python -m unittest tests.TestMain
-```
-
-新增测试时，将文件放在 `tests/` 下；发布工作流会执行该目录中的测试文件。
+任务基于 `MyBaseTask`，并在 `src/config.py` 的 `onetime_tasks` 中注册。仓库内的 `$ok-script-tasks` 和 `$ok-script-i18n` 技能说明了任务结构与翻译流程。
