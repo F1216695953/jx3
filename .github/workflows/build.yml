@@ -52,6 +52,10 @@ jobs:
           body: |
             剑网3无界日常助手 ${{ env.APP_VERSION }}
 
+            - OCR 默认改用 ONNX Runtime CPU，避开已报告的 OpenVINO compile_model 访问冲突路径。
+            - 安装包补齐 ONNX Runtime 依赖，并加入真实 OCR 初始化和识别测试。
+            - 仍需在曾闪退的 Windows 10 电脑上验证启动与识别。
+
             - China installer: jx3-wujie-daily-assistant-win32-China-setup-${{ env.APP_VERSION }}.exe
             - Global installer: jx3-wujie-daily-assistant-win32-Global-setup-${{ env.APP_VERSION }}.exe
             - Source and update repository: https://github.com/F1216695953/jx3

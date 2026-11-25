@@ -30,6 +30,8 @@ decorator==5.3.1
     # via retry2
 deprecation==2.1.0
     # via adbutils
+flatbuffers==25.12.19
+    # via onnxruntime
 h11==0.16.0
     # via
     #   httpcore2
@@ -67,6 +69,8 @@ ok-script[adb,default,ocr,qt]==3.0.0b3
     # via ok-script-app (pyproject.toml)
 onnxocr-ppocrv5==0.0.22
     # via ok-script
+onnxruntime==1.32.0
+    # via ok-script-app (pyproject.toml)
 opencc==1.2.0
     # via ok-script
 opencv-python==5.0.0.93
@@ -85,6 +89,8 @@ pillow==13.0.0
     #   ok-d3dshot
     #   ok-script
     #   onnxocr-ppocrv5
+protobuf==7.36.2
+    # via onnxruntime
 psutil==7.2.2
     # via
     #   ok-script

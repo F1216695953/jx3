@@ -71,7 +71,8 @@ config = {
         'lib': 'onnxocr',
         'auto_simplify': True, #自动繁体转简体, 需要ppocrv5等可以识别繁体的库
         'params': {
-            'use_openvino': True,
+            'use_openvino': False,  # 使用 ONNX Runtime CPU，避开部分电脑上 OpenVINO 编译模型时的原生崩溃。
+            'use_npu': False,  # 不在启动时探测 NPU 或进行硬件加速试运行。
         }
     },
     'windows': {  # Windows游戏请填写此设置

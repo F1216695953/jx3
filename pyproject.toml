@@ -9,12 +9,14 @@ dependencies = []
 qt = [
     "ok-script[adb,default,ocr,qt]==3.0.0b3",
     "openvino",
+    "onnxruntime==1.32.0",
     "opencv-python",
 ]
 # Compatibility alias: the web frontend was removed in ok-script 3.
 web = [
     "ok-script[adb,default,ocr,qt]==3.0.0b3",
     "openvino",
+    "onnxruntime==1.32.0",
     "opencv-python",
 ]
 docs = [
