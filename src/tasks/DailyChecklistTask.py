@@ -76,7 +76,7 @@ class DailyChecklistTask(MyBaseTask):
             "茶馆任务列表": "选择一个茶馆任务执行；未选择时不执行茶馆任务。整合茶馆任务会临时切换此选择。",
             "接受第一次跑商任务": "开启后，在茶馆流程之后、大侠之路之前，通过活动日历前往据点贸易并接取第一次跑商任务。",  # 说明独立开关及执行顺序。
             "第一次跑商任务": "开启后，在跑商接取流程之后循环执行据点、总管、据点贸易、交任务和接受任务；未发现接受任务时结束。",  # 说明跑商执行开关。
-            "完成后返回角色选择": "开启后，全部日常完成后按 Esc 并点击指定位置，直到检测到主界面，再识别并点击‘返回角色’。",  # 说明结束后的角色切换流程。
+            "完成后返回角色选择": "开启后，检测主界面；未通过时按 Esc 等2秒重试，通过后按 Esc 等2秒并点击指定位置，识别‘角色’后点击，未命中则重新检测主界面。",  # 说明结束后的角色切换流程。
             "Daxia Road Retry Limit": "Maximum number of incomplete Daxia Road entries to process in one run.",
         })
         self.config_type.update({
@@ -137,8 +137,9 @@ class DailyChecklistTask(MyBaseTask):
             else:
                 self.info_set("茶馆任务状态", "未选择")
         self._first_trade_redirected = False  # 重置本轮接取流程是否已转入跑商循环。
+        self._first_trade_finished = False  # 重置本轮是否已识别跑商完成。
         self._run_first_trade_accept()  # 根据独立开关决定是否接取第一次跑商任务。
-        if not self._first_trade_redirected:  # 避免接取流程已跳转后再次执行跑商。
+        if not self._first_trade_redirected and not self._first_trade_finished:  # 已跳转或已完成时不再执行跑商循环。
             self._run_first_trade()  # 根据独立开关执行第一次跑商交接循环。
         self._run_daxia_until_complete()
         self._return_to_character_selection()  # 所有日常流程结束后按开关返回角色选择。
@@ -377,7 +378,13 @@ class DailyChecklistTask(MyBaseTask):
             return False  # 避免在其他界面继续点击。
         self.info_set("跑商接取状态", "已进入活动日历界面")  # 确认进入日历。
         entry_box = self.box_of_screen(0.005, 0.079, to_x=0.322, to_y=0.849)  # 设置据点贸易活动列表区域。
-        entry = self.wait_ocr(box=entry_box, match=re.compile(r"据点贸易"), time_out=5.0, raise_if_not_found=False)  # 查找活动列表中的据点贸易。
+        entry = self.wait_ocr(box=entry_box, match=re.compile(r"据点贸易|已完成"), time_out=5.0, raise_if_not_found=False) or []  # 同时识别活动入口与完成标记，并兼容OCR超时。
+        if any("已完成" in str(getattr(word, "name", "")) for word in entry):  # 已完成优先于点击活动入口。
+            self._first_trade_finished = True  # 标记本轮无需接取或继续执行跑商。
+            self.info_set("跑商接取状态", "跑商已结束")  # 显示跑商已完成。
+            self.info_set("第一次跑商状态", "跑商已结束")  # 同步跑商执行状态。
+            self.log_info("活动日历识别到‘已完成’，跑商已结束。")  # 记录提前结束原因。
+            return True  # 结束跑商流程，继续其他日常任务。
         if not entry:  # 活动入口缺失时停止。
             self.info_set("跑商接取状态", "未识别到据点贸易活动")  # 显示入口检测失败。
             return False  # 不点击前往按钮。
@@ -436,10 +443,8 @@ class DailyChecklistTask(MyBaseTask):
             self.info_set("第一次跑商状态", f"执行第{step}步")  # 显示当前流程阶段。
             if step == 1:  # 查找任务追踪中的据点或日常文字。
                 words = self.wait_ocr(box=quest_box, match=re.compile(r"据点|日常"), time_out=2.0, raise_if_not_found=False)  # 任意关键词命中即可。
-                if not words:  # 未识别到时等待三秒重试当前步骤。
-                    self.sleep(3.0)  # 等待并刷新画面，支持手动停止。
-                    continue  # 保持在第一步。
-                self.click_box(words[0], after_sleep=3.0)  # 点击命中的据点或日常文字并等待三秒。
+                if words:  # 仅在识别到据点或日常文字时点击。
+                    self.click_box(words[0], after_sleep=3.0)  # 点击命中文字并等待三秒。
                 step = 2  # 进入目的地和 NPC 合并识别。
             elif step == 2:  # 同一轮同时检测目的地和据点总管关键词。
                 combined_words = self.wait_ocr(  # 在合并后的区域同一轮识别目的地和 NPC 关键词。
@@ -1470,23 +1475,24 @@ class DailyChecklistTask(MyBaseTask):
         if not self.config.get("完成后返回角色选择", False):  # 检查结束后返回角色选择开关。
             return False  # 关闭时不执行任何窗口操作。
         self.info_set("返回角色选择状态", "等待主界面")  # 显示当前等待阶段。
-        while True:  # 按已确认的 B 流程循环，直到主界面条件成立。
+        while True:  # 循环检测主界面并打开返回角色操作，直到OCR命中。
             frame = self.next_frame()  # 获取最新截图用于主界面判断。
-            if self._is_main_interface(frame):  # 已在主界面时结束 Esc 和坐标点击循环。
-                break  # 继续查找返回角色按钮。
-            self.log_info("当前不在主界面，按 Esc 并点击指定位置后重试。")  # 记录本轮返回操作。
-            self.send_key("esc", after_sleep=2.0)  # 按 Esc 并等待菜单或界面变化。
-            self.click_relative(0.967, 0.931, after_sleep=2.0)  # 点击指定相对位置并等待两秒后重新检测。
-        self.info_set("返回角色选择状态", "识别返回角色")  # 显示主界面已确认。
-        return_box = self.box_of_screen(0.261, 0.661, to_x=0.739, to_y=0.806)  # 将提供的反向区域坐标规范化为左上到右下。
-        return_button = self.wait_ocr(box=return_box, match=re.compile(r"返回角色"), time_out=5.0, raise_if_not_found=False)  # 最多五秒查找返回角色文字。
-        if not return_button:  # 识别不到按钮时保留角色并报告失败。
-            self.info_set("返回角色选择状态", "未识别到返回主界面")  # 按要求显示识别失败提示。
-            self.log_warning("主界面已确认，但指定区域未识别到‘返回角色’。")  # 记录识别失败原因。
-            return False  # 不进行坐标猜测点击。
-        self.click_box(return_button[0], after_sleep=1.0)  # 点击 OCR 文字位置并等待一秒。
-        self.info_set("返回角色选择状态", "已点击返回角色")  # 显示已经发送角色选择操作。
-        return True  # 返回流程已执行状态。
+            if not self._is_main_interface(frame):  # 未在主界面时先用Esc返回。
+                self.log_info("当前不在主界面，按 Esc 等待2秒后重新检测主界面。")  # 记录本轮返回操作。
+                self.send_key("esc", after_sleep=2.0)  # 按Esc并等待两秒。
+                continue  # 返回主界面检测。
+            self.send_key("esc", after_sleep=2.0)  # 确认在主界面后按Esc并等待两秒。
+            self.click_relative(0.967, 0.931, after_sleep=2.0)  # 点击指定相对坐标并等待两秒。
+            self.info_set("返回角色选择状态", "识别返回角色")  # 显示进入OCR识别阶段。
+            return_box = self.box_of_screen(0.263, 0.642, to_x=0.733, to_y=0.797)  # 使用新的角色关键词识别区域。
+            return_button = self.wait_ocr(box=return_box, match=re.compile(r"角色"), time_out=5.0, raise_if_not_found=False)  # 最多五秒识别包含角色的文字。
+            if not return_button:  # OCR未命中时重新确认主界面。
+                self.info_set("返回角色选择状态", "未识别到角色，重新检测主界面")  # 显示重试原因。
+                self.log_info("指定区域未识别到‘角色’，返回主界面检测。")  # 记录失败后的跳转。
+                continue  # 回到主界面检测，不结束整个流程。
+            self.click_box(return_button[0], after_sleep=1.0)  # 点击OCR关键词位置并等待一秒。
+            self.info_set("返回角色选择状态", "已点击返回角色")  # 显示已经发送角色选择操作。
+            return True  # 完成本次返回角色流程。
 
     def _wait_for_main_interface(self, attempts=10):
         """轮询主界面条件；首次不满足时按 Esc 后继续检测。"""

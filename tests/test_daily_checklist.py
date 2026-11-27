@@ -113,27 +113,34 @@ class DailyChecklistTaskTests(TaskTestCase):
         foreground.assert_not_called()  # 返回角色流程不检查窗口前置。
         self.assertEqual(next_frame.call_count, 2)  # 第一次未命中后刷新截图再检测。
         self.assertEqual(is_main.call_count, 2)  # 主界面检测直到命中。
-        send_key.assert_called_once_with("esc", after_sleep=2.0)  # 非主界面时发送 Esc 并等待。
-        click_relative.assert_called_once_with(0.967, 0.931, after_sleep=2.0)  # 非主界面时点击指定位置。
-        box_of_screen.assert_called_once_with(0.261, 0.661, to_x=0.739, to_y=0.806)  # 校验反向坐标规范化后的 OCR 区域。
-        self.assertEqual(wait_ocr.call_args.kwargs["match"].pattern, "返回角色")  # 确认匹配指定文字。
+        self.assertEqual(send_key.call_args_list, [unittest.mock.call("esc", after_sleep=2.0)] * 2)  # 未在主界面和已在主界面分别按一次Esc。
+        click_relative.assert_called_once_with(0.967, 0.931, after_sleep=2.0)  # 仅主界面确认后点击指定位置。
+        box_of_screen.assert_called_once_with(0.263, 0.642, to_x=0.733, to_y=0.797)  # 校验新的OCR区域。
+        self.assertEqual(wait_ocr.call_args.kwargs["match"].pattern, "角色")  # 确认关键词调整为角色。
         self.assertEqual(wait_ocr.call_args.kwargs["time_out"], 5.0)  # 确认最多等待五秒。
         click_box.assert_called_once_with(button, after_sleep=1.0)  # 点击识别到的文字位置。
 
-    def test_return_to_character_selection_does_not_click_when_ocr_misses(self):
+    def test_return_to_character_selection_rechecks_main_when_ocr_misses(self):
         self.task.config = {"完成后返回角色选择": True}  # 开启结束后返回角色选择。
         frame = np.zeros((720, 1280, 3), dtype=np.uint8)  # 创建用于主界面判断的截图。
         with patch.object(self.task, "_ensure_game_foreground") as foreground, \
-                patch.object(self.task, "next_frame", return_value=frame), \
-                patch.object(self.task, "_is_main_interface", return_value=True), \
+                patch.object(self.task, "next_frame", return_value=frame) as next_frame, \
+                patch.object(self.task, "_is_main_interface", side_effect=[True, False, True]) as is_main, \
+                patch.object(self.task, "send_key") as send_key, \
+                patch.object(self.task, "click_relative") as click_relative, \
                 patch.object(self.task, "box_of_screen", return_value="return-region"), \
-                patch.object(self.task, "wait_ocr", return_value=[]), \
+                patch.object(self.task, "wait_ocr", side_effect=[None, [frame]]) as wait_ocr, \
                 patch.object(self.task, "click_box") as click_box, \
                 patch.object(self.task, "info_set") as info_set:
-            self.assertFalse(self.task._return_to_character_selection())  # 未识别按钮时报告未完成。
+            self.assertTrue(self.task._return_to_character_selection())  # 未识别后返回检测并在下一轮命中。
         foreground.assert_not_called()  # 即使OCR失败也不检查窗口前置。
-        click_box.assert_not_called()  # 不猜测按钮位置点击。
-        info_set.assert_any_call("返回角色选择状态", "未识别到返回主界面")  # 显示调整后的 OCR 失败状态。
+        self.assertEqual(next_frame.call_count, 3)  # OCR失败后确实获取新画面检测主界面。
+        self.assertEqual(is_main.call_count, 3)  # 覆盖命中、返回失败和再次命中三个状态。
+        self.assertEqual(send_key.call_args_list, [unittest.mock.call("esc", after_sleep=2.0)] * 3)  # 每次按Esc均等待两秒。
+        self.assertEqual(click_relative.call_args_list, [unittest.mock.call(0.967, 0.931, after_sleep=2.0)] * 2)  # 只有主界面命中时才点击菜单位置。
+        self.assertEqual(wait_ocr.call_count, 2)  # 确认OCR失败会重新执行。
+        click_box.assert_called_once_with(frame, after_sleep=1.0)  # 仅点击成功识别的关键词位置。
+        info_set.assert_any_call("返回角色选择状态", "未识别到角色，重新检测主界面")  # 显示OCR失败后的重试状态。
 
     def test_daxia_road_flow_switch_can_disable_the_whole_flow(self):
         self.task.config = {"启用大侠之路检测": False}
@@ -797,7 +804,7 @@ class DailyChecklistTaskTests(TaskTestCase):
                     unittest.mock.call(0.625, 0.290, to_x=0.951, to_y=0.411),  # 据点贸易对话。
                     unittest.mock.call(914 / 1280, 645 / 720, to_x=1100 / 1280, to_y=702 / 720),  # 接受任务。
                 ])  # 完成区域顺序校验。
-                self.assertEqual([c.kwargs["match"].pattern for c in ocr.call_args_list], ["据点", "活动日历", "据点贸易", "阵营沙盘", "确认", "据点|总管", "据点贸易", "接受任务"])  # 验证新步骤先于确认弹窗检测。
+                self.assertEqual([c.kwargs["match"].pattern for c in ocr.call_args_list], ["据点", "活动日历", "据点贸易|已完成", "阵营沙盘", "确认", "据点|总管", "据点贸易", "接受任务"])  # 验证完成标记与活动入口在同次OCR中检测。
                 npc_pattern = ocr.call_args_list[5].kwargs["match"]  # 检查 NPC 任意关键词匹配。
                 self.assertIsNotNone(npc_pattern.search("据点"))  # “据点”单独出现也能命中。
                 self.assertIsNotNone(npc_pattern.search("总管"))  # “总管”单独出现也能命中。
@@ -810,6 +817,32 @@ class DailyChecklistTaskTests(TaskTestCase):
                 expected_clicks.extend(unittest.mock.call(words[i], after_sleep=1.0) for i in [4, 5, 6])  # 依次点击 NPC、任务对话和接受按钮。
                 self.assertEqual(click_box.call_args_list, expected_clicks)  # 验证所有识别框点击顺序。
                 info_set.assert_any_call("跑商接取状态", "第一次跑商任务已接取")  # 成功后显示跑商任务状态。
+
+    def test_first_trade_completed_calendar_stops_accept_and_execution(self):  # 验证完成后不会继续接取或启动跑商循环。
+        for names in [["已完成"], ["据点贸易", "已完成"]]:  # 覆盖仅完成标记及两者同时识别。
+            with self.subTest(names=names):  # 区分不同OCR结果。
+                self.task.config = {"接受第一次跑商任务": True, "第一次跑商任务": True}  # 两个开关开启时仍应结束跑商。
+                with patch.object(self.task, "_run_huaxialou_checkin"), \
+                        patch.object(self.task, "_run_tea_cake_claim"), \
+                        patch.object(self.task, "_ensure_game_foreground", return_value=True), \
+                        patch.object(self.task, "_wait_for_main_interface", return_value=object()), \
+                        patch.object(self.task, "send_key_down"), \
+                        patch.object(self.task, "send_key"), \
+                        patch.object(self.task, "send_key_up"), \
+                        patch.object(self.task, "box_of_screen", return_value="region"), \
+                        patch.object(self.task, "wait_ocr", side_effect=[[], [SimpleNamespace(name="活动日历")], [SimpleNamespace(name=name) for name in names]]) as ocr, \
+                        patch.object(self.task, "click_box") as click_box, \
+                        patch.object(self.task, "click_relative") as click_relative, \
+                        patch.object(self.task, "_run_first_trade") as trade, \
+                        patch.object(self.task, "_run_daxia_until_complete"), \
+                        patch.object(self.task, "_return_to_character_selection"), \
+                        patch.object(self.task, "info_set") as info_set:
+                    self.task.run()  # 从实际日常入口验证接取与执行之间的控制。
+                self.assertEqual(ocr.call_count, 3)  # 完成标记后不再识别沙盘或对话。
+                click_box.assert_not_called()  # 不点击活动或完成文字。
+                click_relative.assert_not_called()  # 不点击前往。
+                trade.assert_not_called()  # 不继续执行跑商循环。
+                info_set.assert_any_call("跑商接取状态", "跑商已结束")  # 显示用户要求的状态。
 
     def test_first_trade_missing_required_keyword_stops_without_success(self):
         for missing in [0, 1, 2, 4, 5, 6]:  # 只有可选确认弹窗允许未命中。
@@ -882,6 +915,8 @@ class DailyChecklistTaskTests(TaskTestCase):
     def test_first_trade_execution_loops_and_retries_requested_steps(self):
         scenarios = [  # 覆盖同帧命中NPC、同帧目的地优先、未命中回第一步和镖师分支。
             (["据点", "总管", None, "据点贸易", "交任务", None], []),  # 同帧识别 NPC 后直接进入后续流程。
+            ([None, "总管", None, "据点贸易", "交任务", None], []),  # 第一步OCR超时返回None时直接进入第二步。
+            ([[], "总管", None, "据点贸易", "交任务", None], []),  # 第一步OCR返回空列表时直接进入第二步。
             (["据点", ["总管", "南屏山"], "确认", "总管", None, "据点贸易", "交任务", None], []),  # 同帧命中时优先处理目的地，再刷新识别NPC。
             (["据点", None, "据点", "总管", None, "据点贸易", "交任务", None], [8.0]),  # 合并OCR未命中时等待并回第一步。
             (["据点", [], "据点", "总管", None, "据点贸易", "交任务", None], [8.0]),  # 空列表和超时返回None均应走未命中重试分支。
@@ -922,6 +957,8 @@ class DailyChecklistTaskTests(TaskTestCase):
                 self.assertEqual(ocr.call_args_list[1].kwargs["box"], "combined")  # 合并 OCR 使用统一区域。
                 self.assertEqual(ocr.call_args_list[1].kwargs["time_out"], 2.0)  # 合并检测仍最多等待两秒。
                 self.assertEqual(sleep.call_args_list, [unittest.mock.call(delay) for delay in delays])  # 检查未命中时的等待。
+                if not values[0]:  # 第一步未命中时不应点击任务追踪或额外等待三秒。
+                    self.assertEqual(click_box.call_args_list[0], unittest.mock.call(result_words[1][0], after_sleep=1.0))  # 首次点击直接来自第二步NPC识别结果。
                 if not values[1]:  # 合并OCR无结果时应回到任务追踪识别。
                     self.assertEqual(ocr.call_args_list[2].kwargs["box"], "quest")  # 确认等待八秒后重新执行第一步。
                 if values[1] == ["总管", "南屏山"]:  # 同时命中两类文字时检查目的地优先。
