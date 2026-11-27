@@ -64,9 +64,10 @@ jobs:
           $notes = @"
             剑网3无界日常助手 ${{ env.APP_VERSION }}
 
-            - OCR 默认改用 ONNX Runtime CPU，避开已报告的 OpenVINO compile_model 访问冲突路径。
-            - 安装包补齐 ONNX Runtime 依赖，并加入真实 OCR 初始化和识别测试。
-            - 仍需在曾闪退的 Windows 10 电脑上验证启动与识别。
+            - 返回角色：确认主界面后打开菜单，识别指定区域的“角色”并点击；未命中时重新检测主界面。
+            - 跑商循环：第1步未识别到“据点/日常”时直接进入第2步。
+            - 跑商接取：活动日历中识别到“已完成”时显示“跑商已结束”，跳过后续跑商循环。
+            - 沿用 ONNX Runtime CPU OCR；仍需在目标电脑上验证游戏中的完整流程。
 
             - China installer: jx3-wujie-daily-assistant-win32-China-setup-${{ env.APP_VERSION }}.exe
             - Global installer: jx3-wujie-daily-assistant-win32-Global-setup-${{ env.APP_VERSION }}.exe
